@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>password generator</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body> 
+        <div class="h-[100vh] w-[100vw] bg-[url('background.jpg')] bg-cover bg-center">
+            <div class=" w-5/12 h-3/4 flex flex-col items-center absolute left-1/2 transform -translate-x-1/2 mt-48 ">
+                <div class="text-black font-serif font-bold text-4xl">PASSWORD GENERATOR</div>
+                <div class=" flex flex-row mt-5 bg-white w-72 rounded-xl">
+                    <input data-passwordDisplay class="w-52 h-10 mr-9 ml-2 ">
+                    <button data-copy class="text-black"><i class="fa-regular fa-copy fa-2xl"></i><span data-copyMsg></span></button>
+                </div>
+                <div class="bg-yellow-700/60 h-80 rounded-2xl mt-2 w-96 ">
+                    <div class="flex flex-row items-center ml-5 font-bold text-2xl">
+                        <div class="mt-2 font-serif">Password Length</div>
+                        <div data-lengthnumber class="font-bold ml-20 mt-1 bg-white w-10 flex flex-row text-center rounded-xl">0</div>
+                    </div>
+                    <input data-lengthSlider type="range" min="0" max="20" class="w-72 ml-10 mt-4" />
+                    <br>
+                    <div class="mt-4 ml-4 text-xl font-serif">
+                        <input type="checkbox" id="uppercase">
+                        <label for="uppercase">Includes Uppercase letters</label>
+                    </div>
+                    <div class="ml-4 text-xl font-serif">
+                        <input type="checkbox" id="Lowercase">
+                        <label for="Lowercase">Includes Lowercase letters</label>
+                    </div>
+                    <div class="ml-4 text-xl font-serif">
+                        <input type="checkbox" id="numbers">
+                        <label for="numbers">Includes numbers </label>
+                    </div>
+                    <div class="ml-4 text-xl font-serif">
+                        <input type="checkbox" id="symbols">
+                        <label for="symbols">Includes symbols</label>
+                    </div>
+                        <button generate-btn class=" bg-teal-700 text-xl mt-6 text-white w-72 h-9 font-serif text-bold absolute left-1/2 transform -translate-x-1/2 rounded-xl">Generate  Pasword</button>
+                </div>
+            </div>
+        </div>
+        <script src="https://kit.fontawesome.com/58a810656e.js" crossorigin="anonymous"></script>
+        <script>
+            const inputSlider = document.querySelector("[data-lengthSlider]");
+const lengthDisplay = document.querySelector("[data-lengthNumber]");
+
+const passwordDisplay = document.querySelector("[data-passwordDisplay]");
+const copyBtn = document.querySelector("[data-copy]");
+const copyMsg = document.querySelector("[data-copyMsg]");
+const uppercaseCheck = document.querySelector("#uppercase");
+const lowercaseCheck = document.querySelector("#Lowercase");
+const numbersCheck = document.querySelector("#numbers");
+const symbolsCheck = document.querySelector("#symbols");
+const indicator = document.querySelector("[data-indicator]");
+const generateBtn = document.querySelector("[generate-btn]");
+const allCheckBox = document.querySelectorAll("input[type=checkbox]");
+const symbols = '~`!@#$%^&*()_-+={[}]|:;"<,>.?/';
+
+
+let password = "";
+let passwordLength = 10;
+let checkCount = 0;
+handleSlider();
+function handleSlider() {
+    inputSlider.value = passwordLength;
+    lengthDisplay.innerText = passwordLength;
+}
+
+function getRndInteger(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function generateRandomNumber() {
+    return getRndInteger(0,9);
+}
+
+function generateLowerCase() {  
+       return String.fromCharCode(getRndInteger(97,123))
+}
+
+function generateUpperCase() {  
+    return String.fromCharCode(getRndInteger(65,91))
+}
+
+function generateSymbol() {
+    const randNum = getRndInteger(0, symbols.length);
+    return symbols.charAt(randNum);
+}
+
+async function copyContent() {
+    try {
+        await navigator.clipboard.writeText(passwordDisplay.value);
+        copyMsg.innerText = "copied";
+    }
+    catch(e) {
+        copyMsg.innerText = "Failed";
+    }
+    copyMsg.classList.add("active");
+
+    setTimeout( () => {
+        copyMsg.classList.remove("active");
+    },2000);
+
+}
+
+function shufflePassword(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+      }
+    let str = "";
+    array.forEach((el) => (str += el));
+    return str;
+}
+
+function handleCheckBoxChange() {
+    checkCount = 0;
+    allCheckBox.forEach( (checkbox) => {
+        if(checkbox.checked)
+            checkCount++;
+    });
+
+    if(passwordLength < checkCount ) {
+        passwordLength = checkCount;
+        handleSlider();
+    }
+}
+
+allCheckBox.forEach( (checkbox) => {
+    checkbox.addEventListener('change', handleCheckBoxChange);
+})
+
+
+inputSlider.addEventListener('input', (e) => {
+    passwordLength = e.target.value;
+    handleSlider();
+})
+
+
+copyBtn.addEventListener('click', () => {
+    if(passwordDisplay.value)
+        copyContent();
+})
+generateBtn.addEventListener('click', () => {
+
+    if(checkCount == 0) 
+        return;
+
+    if(passwordLength < checkCount) 
+    {
+        passwordLength = checkCount;
+        handleSlider();
+    }
+    password = "";
+
+    let funcArr = [];
+
+    if(uppercaseCheck.checked)
+        funcArr.push(generateUpperCase);
+
+    if(lowercaseCheck.checked)
+        funcArr.push(generateLowerCase);
+
+    if(numbersCheck.checked)
+        funcArr.push(generateRandomNumber);
+
+    if(symbolsCheck.checked)
+        funcArr.push(generateSymbol);
+
+    for(let i=0; i<funcArr.length; i++) {
+        password += funcArr[i]();
+    }
+
+    for(let i=0; i<passwordLength-funcArr.length; i++) 
+    {
+        let randIndex = getRndInteger(0 , funcArr.length);
+        password += funcArr[randIndex]();
+    }
+
+    password = shufflePassword(Array.from(password));
+
+    passwordDisplay.value = password;
+});
+        </script>
+    </body>
+</html>
